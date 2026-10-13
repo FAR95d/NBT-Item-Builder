@@ -174,3 +174,4 @@ The status line above the buttons shows the command length, or what to fix.
 - Written against the Fabric example mod templates for 1.21.10 and 1.21.11, with official
   Mojang mappings. Screen and command class names are the Mojang ones.
 - This project was fully vibecoded so some things may be buggy in the UI.
+<img width="2000" height="2000" alt="wizard" src="https://github.com/user-attachments/assets/cac5548a-c4bb-4678-a122-a88233f5deb0" />
