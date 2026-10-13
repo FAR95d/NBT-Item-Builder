@@ -1,4 +1,3 @@
-<img width="2000" height="2000" alt="wizard" src="https://github.com/user-attachments/assets/9430ff90-9f09-475d-bd1b-6c19c6666606" />
 # NBT Item Builder (Fabric, Minecraft 1.21.10 and 1.21.11)
 
 An in-game screen for building items with custom names, lore, enchantments, attribute
