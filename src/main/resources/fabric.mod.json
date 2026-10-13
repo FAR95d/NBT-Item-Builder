@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "nbtitembuilder",
+	"version": "${version}",
+	"name": "NBT Item Builder",
+	"description": "Build items with custom names, lore, enchantments, attributes and container contents in an in-game screen, then give them to yourself.",
+	"icon": "assets/nbtitembuilder/icon.png",
+	"authors": [
+		"NBT Item Builder"
+	],
+	"license": "MIT",
+	"environment": "client",
+	"entrypoints": {
+		"client": [
+			"dev.nbtitembuilder.NbtItemBuilderClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": ["1.21.10", "1.21.11"],
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
