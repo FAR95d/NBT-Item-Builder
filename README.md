@@ -1,4 +1,4 @@
-# NBT Item Builder (Fabric, Minecraft 1.21.10 and 1.21.11)
+# NBT Item Builder (Fabric, Minecraft 1.21.10, 1.21.11 and 26.2)
 
 An in-game screen for building items with custom names, lore, enchantments, attribute
 modifiers, food, equipment, spawner data and any other component. Type `/nbtbuilder` in chat to open it.
@@ -96,11 +96,13 @@ You do not need a GitHub repository. Pick whichever fits you.
 
 ### Option 1: build on your computer
 
-You need JDK 21 and an internet connection (Gradle downloads Minecraft and Fabric).
+You need JDK 21 for the 1.21.x jars, JDK 25 for the 26.x jars, and an internet
+connection (Gradle downloads Minecraft and Fabric).
 
 ```
 ./gradlew build          # Minecraft 1.21.11. On Windows: gradlew.bat build
 ./gradlew build -Pminecraft_version=1.21.10 -Pfabric_api_version=0.138.4+1.21.10
+./gradlew build -Pminecraft_version=26.2 -Pfabric_api_version=0.161.0+26.2   # needs JDK 25
 ```
 
 The jar is in `build/libs/`, named like `nbt-item-builder-1.2.0+mc1.21.11.jar`. Ignore the
@@ -129,13 +131,13 @@ source compiles against each. Artifacts are kept for 90 days.
 
 ## Install
 
-1. Install Fabric Loader 0.19.3 or newer for your Minecraft version.
+1. Install Fabric Loader 0.19.5 or newer for your Minecraft version.
 2. Put the Fabric API that matches your Minecraft version in your `mods` folder.
-3. Put the mod jar in the same `mods` folder.
+3. Put the mod jar in the same `mods` folder. Playing 26.x needs Java 25.
 
-Use the jar built for your version. The mod declares that it supports both 1.21.10 and
-1.21.11, and it only uses long-standing client classes, but a jar compiled for the exact
-version is the safest choice.
+Use the jar built for your version. Each jar only supports the version it was
+compiled for (1.21.10, 1.21.11 or 26.2): the 1.21 and 26 code paths differ, so
+mixing them cannot work.
 
 ## Contents syntax
 
@@ -172,7 +174,8 @@ The status line above the buttons shows the command length, or what to fix.
 
 ## Notes
 
-- The mod writes the 1.21.5+ item component format, which 1.21.10 and 1.21.11 both use.
+- The mod writes the 1.21.5+ item component format, which 1.21.10, 1.21.11 and 26.2 all use.
 - The item logic (`ItemSpec`, `ItemLoader`, `Snbt`, `Colors`, `Components`, `ItemModel`) has no Minecraft dependencies, so it can be tested on its own.
-- Written against the Fabric example mod templates for 1.21.10 and 1.21.11, with official
-  Mojang mappings. Screen and command class names are the Mojang ones.
+- Written against the Fabric example mod templates for 1.21.10, 1.21.11 and 26.2. The 26.x
+  game is unobfuscated, so that jar uses Mojang's real names directly; the 1.21 jars use
+  official Mojang mappings.

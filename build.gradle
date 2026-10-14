@@ -1,9 +1,42 @@
-plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+buildscript {
+	repositories {
+		maven {
+			name = 'Fabric'
+			url = 'https://maven.fabricmc.net/'
+		}
+		gradlePluginPortal()
+		mavenCentral()
+	}
+	dependencies {
+		classpath "net.fabricmc:fabric-loom:${loom_version}"
+	}
 }
+
+// 26.x is unobfuscated (plain loom, no mappings); 1.21.x is obfuscated
+// (remap loom with official Mojang mappings).
+if (project.minecraft_version.toString().startsWith("26.")) {
+	apply plugin: 'net.fabricmc.fabric-loom'
+} else {
+	apply plugin: 'net.fabricmc.fabric-loom-remap'
+}
+
+// Minecraft 26.x is unobfuscated (no mappings); 1.21.x uses official Mojang mappings.
+// Minecraft 26.x runs on Java 25; 1.21.x runs on Java 21.
+def isModern = project.minecraft_version.toString().startsWith("26.")
+def javaVersion = isModern ? JavaVersion.VERSION_25 : JavaVersion.VERSION_21
 
 base {
 	archivesName = project.archives_base_name
+}
+
+// UI code differs per era (1.21 screens render immediately, 26.x extracts
+// render state), so each build compiles the shared logic plus one UI set.
+sourceSets {
+	main {
+		java {
+			srcDir(isModern ? 'src/mc26/java' : 'src/mc121/java')
+		}
+	}
 }
 
 // The jar name carries the Minecraft version it was compiled against.
@@ -16,30 +49,38 @@ repositories {
 dependencies {
 	// Versions are set in gradle.properties.
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	if (isModern) {
+		implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	} else {
+		mappings loom.officialMojangMappings()
+		modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+		modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	}
 }
 
 processResources {
 	def version = project.version.toString()
 	inputs.property "version", version
+	def mcDepends = isModern ? '"~' + project.minecraft_version + '"' : '["1.21.10", "1.21.11"]'
+	inputs.property "mcDepends", mcDepends
+	inputs.property "javaVersion", javaVersion.majorVersion
 
 	filesMatching("fabric.mod.json") {
-		expand "version": version
+		expand "version": version, "mcDepends": mcDepends, "javaVersion": javaVersion.majorVersion
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = Integer.parseInt(javaVersion.majorVersion)
 	it.options.encoding = 'UTF-8'
 }
 
 java {
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = javaVersion
+	targetCompatibility = javaVersion
 }
 
 jar {
