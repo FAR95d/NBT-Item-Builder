@@ -8,10 +8,7 @@ just like in an inventory.
 
 New here? Follow the three steps on the Item tab:
 
-1. **Pick an item**: type a few letters (e.g. `dia sw`) and choose from the dropdown,
-   which shows icons and inventory names — every item in the game is in there,
-   and `comm_` finds `command_block`. Or hold the item in your hand
-   and press **Load held item**.
+1. **Pick an item**
 2. **Style it** on the next tabs: name, colors, enchantments, food, spawner settings.
    Leave any box empty to keep the vanilla default. Boxes with fixed options get
    dropdowns, icon buttons or sliders instead of typing.
@@ -179,3 +176,4 @@ The status line above the buttons shows the command length, or what to fix.
 - Written against the Fabric example mod templates for 1.21.10, 1.21.11 and 26.2. The 26.x
   game is unobfuscated, so that jar uses Mojang's real names directly; the 1.21 jars use
   official Mojang mappings.
+- This project was fully vibecoded so some things may be buggy in the UI.
