@@ -101,40 +101,10 @@ public final class Components {
         {"minecraft:villager_food", "Villager food"},
     };
 
-    /** Mobs commonly used in spawners, for the picker and autocomplete. */
-    public static final String[][] ENTITY_OPTIONS = {
-        {"zombie", "Zombie"}, {"skeleton", "Skeleton"}, {"spider", "Spider"},
-        {"cave_spider", "Cave spider"}, {"creeper", "Creeper"}, {"enderman", "Enderman"},
-        {"slime", "Slime"}, {"blaze", "Blaze"}, {"ghast", "Ghast"},
-        {"magma_cube", "Magma cube"}, {"wither_skeleton", "Wither skeleton"},
-        {"piglin", "Piglin"}, {"piglin_brute", "Piglin brute"}, {"hoglin", "Hoglin"},
-        {"zoglin", "Zoglin"}, {"ghastling", "Ghastling"},
-        {"drowned", "Drowned"}, {"husk", "Husk"}, {"stray", "Stray"},
-        {"phantom", "Phantom"}, {"witch", "Witch"}, {"evoker", "Evoker"},
-        {"vindicator", "Vindicator"}, {"pillager", "Pillager"}, {"ravager", "Ravager"},
-        {"warden", "Warden"}, {"endermite", "Endermite"}, {"silverfish", "Silverfish"},
-        {"guardian", "Guardian"}, {"elder_guardian", "Elder guardian"},
-        {"shulker", "Shulker"}, {"cow", "Cow"}, {"pig", "Pig"},
-        {"sheep", "Sheep"}, {"chicken", "Chicken"}, {"horse", "Horse"},
-        {"wolf", "Wolf"}, {"cat", "Cat"}, {"villager", "Villager"},
-        {"iron_golem", "Iron golem"}, {"snow_golem", "Snow golem"}, {"bee", "Bee"},
-        {"axolotl", "Axolotl"}, {"allay", "Allay"}, {"sniffer", "Sniffer"},
-        {"camel", "Camel"}, {"frog", "Frog"}, {"tadpole", "Tadpole"},
-        {"armadillo", "Armadillo"}, {"bogged", "Bogged"}, {"breeze", "Breeze"},
-        {"creaking", "Creaking"},
-    };
-
     /** {id, label} pairs for the component picker. */
     public static List<String[]> componentOptions() {
         List<String[]> out = new ArrayList<>();
         for (String[] c : COMPONENT_OPTIONS) out.add(new String[] {c[0], c[1]});
-        return out;
-    }
-
-    /** {id, label} pairs for the spawner entity picker. */
-    public static List<String[]> entityOptions() {
-        List<String[]> out = new ArrayList<>();
-        for (String[] c : ENTITY_OPTIONS) out.add(new String[] {c[0], c[1]});
         return out;
     }
 
@@ -192,47 +162,40 @@ public final class Components {
         return out;
     }
 
-    /** Banner pattern ids from the vanilla files, for the banner picker. */
-    public static final String[] BANNER_IDS = {
-        "base", "square_bottom_left", "square_bottom_right", "square_top_left", "square_top_right",
-        "stripe_bottom", "stripe_top", "stripe_left", "stripe_right", "stripe_center", "stripe_middle",
-        "stripe_downright", "stripe_downleft", "small_stripes", "cross", "straight_cross",
-        "diagonal_left", "diagonal_right", "diagonal_up_left", "diagonal_up_right",
-        "triangle_bottom", "triangle_top", "triangles_bottom", "triangles_top",
-        "circle", "rhombus", "half_vertical", "half_horizontal", "half_vertical_right", "half_horizontal_bottom",
-        "border", "curly_border", "gradient", "gradient_up", "bricks", "field_masoned", "bordure_indented",
-        "creeper", "skull", "flower", "mojang", "globe", "piglin", "flow", "guster",
-    };
+    /** ---- Registry-fed option lists ----------------------------------------------------
+     * The client (GameLists) fills these from the live game registries, so everything the
+     * game or its mods define shows up in the pickers; nothing here is hardcoded.
+     * Empty until the builder screen opens in a world. */
+    public static List<String> bannerIds = List.of();
+    public static List<String> trimMaterialIds = List.of();
+    public static List<String> trimPatternIds = List.of();
+    public static List<String> songIds = List.of();
+
+    /** Goat-horn cycle values; index 0 is the unset "Default". Filled by GameLists. */
+    public static String[] instrumentKeys = {"", "ponder_goat_horn", "sing_goat_horn", "seek_goat_horn",
+        "feel_goat_horn", "admire_goat_horn", "call_goat_horn", "yearn_goat_horn", "dream_goat_horn"};
+    public static String[] instrumentLabels = {"Default", "Ponder", "Sing", "Seek", "Feel", "Admire", "Call",
+        "Yearn", "Dream"};
+
+    /** Replaces the horn cycle with the live instrument registry (a leading Default is added). */
+    public static void setInstruments(List<String> ids) {
+        List<String> keys = new ArrayList<>();
+        keys.add("");
+        keys.addAll(ids);
+        instrumentKeys = keys.toArray(new String[0]);
+        String[] labels = new String[keys.size()];
+        labels[0] = "Default";
+        for (int i = 1; i < keys.size(); i++) {
+            labels[i] = humanize(keys.get(i).replace("_goat_horn", ""));
+        }
+        instrumentLabels = labels;
+    }
 
     /** Dye colors, for banner colors and the base color button. */
     public static final String[] DYE_KEYS = {"", "white", "orange", "magenta", "light_blue", "yellow", "lime",
         "pink", "gray", "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"};
     public static final String[] DYE_LABELS = {"Default", "White", "Orange", "Magenta", "Light blue", "Yellow",
         "Lime", "Pink", "Gray", "Light gray", "Cyan", "Purple", "Blue", "Brown", "Green", "Red", "Black"};
-
-    /** Armor trim materials from the vanilla files. */
-    public static final String[] TRIM_MATS = {
-        "quartz", "iron", "netherite", "redstone", "copper", "gold", "emerald", "diamond", "lapis", "amethyst",
-        "resin",
-    };
-
-    /** Armor trim patterns from the vanilla files. */
-    public static final String[] TRIM_PATS = {
-        "bolt", "coast", "dune", "eye", "flow", "host", "raiser", "rib", "sentry", "shaper", "silence", "snout",
-        "spire", "tide", "vex", "ward", "wayfinder", "wild",
-    };
-
-    /** Goat horn instruments from the vanilla files, for the cycle button. */
-    public static final String[] INSTRUMENT_KEYS = {"", "ponder_goat_horn", "sing_goat_horn", "seek_goat_horn",
-        "feel_goat_horn", "admire_goat_horn", "call_goat_horn", "yearn_goat_horn", "dream_goat_horn"};
-    public static final String[] INSTRUMENT_LABELS = {"Default", "Ponder", "Sing", "Seek", "Feel", "Admire", "Call",
-        "Yearn", "Dream"};
-
-    /** Jukebox song ids from the vanilla files, for the song picker. */
-    public static final String[] SONG_IDS = {
-        "11", "13", "5", "blocks", "cat", "chirp", "creator", "creator_music_box", "far", "lava_chicken", "mall",
-        "mellohi", "otherside", "pigstep", "precipice", "relic", "stal", "strad", "tears", "wait", "ward",
-    };
 
     /** True when the id is one the builder writes from its own fields. */
     public static boolean isStructured(String fullId) {
@@ -304,20 +267,6 @@ public final class Components {
         return out.size() > max ? out.subList(0, max) : out;
     }
 
-    /** Suggests entity ids for the spawner field. */
-    public static List<String> suggestEntities(String fragment, int max) {
-        String q = fragment == null ? "" : fragment.trim().toLowerCase(Locale.ROOT).replace(' ', '_');
-        List<String> starts = new ArrayList<>();
-        List<String> contains = new ArrayList<>();
-        for (String[] c : ENTITY_OPTIONS) {
-            if (q.isEmpty() || c[0].startsWith(q)) starts.add(c[0]);
-            else if (c[0].contains(q) || c[1].toLowerCase(Locale.ROOT).contains(q)) contains.add(c[0]);
-        }
-        List<String> out = new ArrayList<>(starts);
-        out.addAll(contains);
-        return out.size() > max ? out.subList(0, max) : out;
-    }
-
     /**
      * "Did you mean ...?" correction for a mistyped id, comparing against the
      * component list, entities and a few core ids. Returns null when nothing
@@ -330,7 +279,6 @@ public final class Components {
         if (q.startsWith("minecraft:")) q = q.substring(10);
         List<String> pool = new ArrayList<>();
         for (String[] c : COMPONENT_OPTIONS) pool.add(c[0].substring(10));
-        for (String[] c : ENTITY_OPTIONS) pool.add(c[0]);
         for (String s : new String[] {"spawner", "chest", "diamond_sword", "common", "uncommon", "rare", "epic"}) {
             pool.add(s);
         }

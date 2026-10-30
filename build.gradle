@@ -35,6 +35,9 @@ sourceSets {
 	main {
 		java {
 			srcDir(isModern ? 'src/mc26/java' : 'src/mc121/java')
+			// The id class was renamed between 1.21.10 and 1.21.11 (ResourceLocation to
+			// Identifier); a tiny per-version helper class bridges the difference.
+			srcDir(minecraft_version == '1.21.10' ? 'src/ids10/java' : 'src/idsmodern/java')
 		}
 	}
 }
@@ -90,4 +93,20 @@ jar {
 	from("LICENSE") {
 		rename { "${it}_$projectName" }
 	}
+}
+
+// The logic classes carry their own plain-main regression suite (no framework), so
+// run it directly instead of the JUnit-less default test task.
+tasks.test {
+	enabled = false
+}
+tasks.register('logicTest', JavaExec) {
+	group = 'verification'
+	description = 'Runs the self-contained logic regression suite.'
+	dependsOn('testClasses')
+	classpath = sourceSets.main.output + sourceSets.test.output
+	mainClass = 'dev.nbtitembuilder.LogicSuite'
+}
+tasks.check {
+	dependsOn('logicTest')
 }

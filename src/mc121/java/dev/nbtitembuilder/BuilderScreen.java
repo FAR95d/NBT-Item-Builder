@@ -130,6 +130,12 @@ public class BuilderScreen extends Screen {
 
     public BuilderScreen() {
         super(Component.literal("NBT Item Builder"));
+        // The lists above this class are static; drop their cached contents and refill
+        // them from the live registries (covers mods added since the last open).
+        bannerEntries = null;
+        trimPatEntries = null;
+        songEntries = null;
+        GameLists.refresh();
     }
 
     // ---- layout -------------------------------------------------------------------------
@@ -1053,12 +1059,8 @@ public class BuilderScreen extends Screen {
         }
     }
 
-    private static final String[][] TRIM_INGREDIENTS = {
-        {"quartz", "quartz"}, {"iron", "iron_ingot"}, {"netherite", "netherite_ingot"},
-        {"redstone", "redstone"}, {"copper", "copper_ingot"}, {"gold", "gold_ingot"},
-        {"emerald", "emerald"}, {"diamond", "diamond"}, {"lapis", "lapis_lazuli"},
-        {"amethyst", "amethyst_shard"}, {"resin", "resin_brick"},
-    };
+    /** Trim materials as GameLists last saw them: {id, ingredient icon or null}. */
+    private List<String[]> trimMats = List.of();
 
     private static final String[] PIECES = {"helmet", "chestplate", "leggings", "boots"};
 
@@ -1067,12 +1069,14 @@ public class BuilderScreen extends Screen {
         morePrevX = left + main + 8;
         morePrevY = y0;
         // Material: icons of the ingredients, no names. Cells shrink on narrow windows.
+        trimMats = GameLists.trimMaterials();
         matStripX = left;
         matStripY = y0;
-        matCellW = Math.min(20, main / TRIM_INGREDIENTS.length);
+        matCellW = trimMats.isEmpty() ? 20 : Math.min(20, main / trimMats.size());
         matIcons.clear();
-        for (String[] t : TRIM_INGREDIENTS) {
-            matIcons.add(SuggestBox.icon("ingredient:" + t[1], "{id:\"minecraft:" + t[1] + "\",count:1}"));
+        for (String[] t : trimMats) {
+            matIcons.add(t[1] == null ? null
+                    : SuggestBox.icon("ingredient:" + t[1], "{id:\"minecraft:" + t[1] + "\",count:1}"));
         }
         // Pattern: name box plus its smithing template icon.
         suggest(left, y0 + 24, main - 24, "Pattern", MODEL.trimPattern, trimPats(), v -> MODEL.trimPattern = v);
@@ -1113,10 +1117,10 @@ public class BuilderScreen extends Screen {
     /** Clicks on the material and armor piece icon strips. True when handled. */
     private boolean clickStrip(double mx, double my) {
         if (tab != 6 || moreSub != 2) return false;
-        for (int i = 0; i < TRIM_INGREDIENTS.length; i++) {
+        for (int i = 0; i < trimMats.size(); i++) {
             if (mx >= matStripX + i * matCellW && mx < matStripX + i * matCellW + matCellW - 2
                     && my >= matStripY && my < matStripY + 20) {
-                String id = TRIM_INGREDIENTS[i][0];
+                String id = trimMats.get(i)[0];
                 MODEL.trimMaterial = id.equals(normId(MODEL.trimMaterial)) ? "" : id;
                 refresh();
                 return true;
@@ -1277,7 +1281,7 @@ public class BuilderScreen extends Screen {
         box(left, y, cw, "Sherds back,left,right,front (empty=none)", MODEL.sherds, v -> MODEL.sherds = v);
         y += ROW;
         box(left, y, half, "Player name", MODEL.headName, v -> MODEL.headName = v);
-        cycle(left + half + 4, y, half, Components.INSTRUMENT_KEYS, Components.INSTRUMENT_LABELS,
+        cycle(left + half + 4, y, half, Components.instrumentKeys, Components.instrumentLabels,
                 "Horn: ", () -> MODEL.instrument, v -> MODEL.instrument = v);
         y += ROW;
         suggest(left, y, cw, "Jukebox song (empty=none)", MODEL.song, songs(), v -> MODEL.song = v);
@@ -1293,7 +1297,7 @@ public class BuilderScreen extends Screen {
     private static List<SuggestBox.Entry> trimPatEntries;
     private static List<SuggestBox.Entry> songEntries;
 
-    private static List<SuggestBox.Entry> entries(String[] ids, String kind) {
+    private static List<SuggestBox.Entry> entries(List<String> ids, String kind) {
         List<SuggestBox.Entry> out = new ArrayList<>();
         for (String id : ids) out.add(new SuggestBox.Entry(id, kind));
         return out;
@@ -1385,17 +1389,17 @@ public class BuilderScreen extends Screen {
     }
 
     private static List<SuggestBox.Entry> banners() {
-        if (bannerEntries == null) bannerEntries = entries(Components.BANNER_IDS, "banner");
+        if (bannerEntries == null) bannerEntries = entries(Components.bannerIds, "banner");
         return bannerEntries;
     }
 
     private static List<SuggestBox.Entry> trimPats() {
-        if (trimPatEntries == null) trimPatEntries = entries(Components.TRIM_PATS, "template");
+        if (trimPatEntries == null) trimPatEntries = entries(Components.trimPatternIds, "template");
         return trimPatEntries;
     }
 
     private static List<SuggestBox.Entry> songs() {
-        if (songEntries == null) songEntries = entries(Components.SONG_IDS, "disc");
+        if (songEntries == null) songEntries = entries(Components.songIds, "disc");
         return songEntries;
     }
 
@@ -1799,13 +1803,13 @@ public class BuilderScreen extends Screen {
             }
             drawBigPreview(g, mouseX, mouseY, bannerPreview);
         } else if (moreSub == 2) {
-            for (int i = 0; i < TRIM_INGREDIENTS.length && i < matIcons.size(); i++) {
+            for (int i = 0; i < trimMats.size() && i < matIcons.size(); i++) {
                 ItemStack icon = matIcons.get(i);
                 int x = matStripX + i * matCellW;
                 if (icon != null && !icon.isEmpty() && matCellW >= 16) {
                     g.renderItem(icon, x + (matCellW - 16) / 2, matStripY + 2);
                 }
-                if (TRIM_INGREDIENTS[i][0].equals(normId(MODEL.trimMaterial))) {
+                if (trimMats.get(i)[0].equals(normId(MODEL.trimMaterial))) {
                     outline(g, x, matStripY - 1, matCellW, 22, 0xFFFFFFFF);
                 }
             }

@@ -171,6 +171,9 @@ The status line above the buttons shows the command length, or what to fix.
 
 ## Notes
 
+- All pickers, strips and autocomplete read the live game registries. Anything a mod adds
+  (items, mobs, enchantments, attributes, potions, effects, banner patterns, trims,
+  horn sounds, music discs) shows up without updating this mod.
 - The mod writes the 1.21.5+ item component format, which 1.21.10, 1.21.11 and 26.2 all use.
 - The item logic (`ItemSpec`, `ItemLoader`, `Snbt`, `Colors`, `Components`, `ItemModel`) has no Minecraft dependencies, so it can be tested on its own.
 - Written against the Fabric example mod templates for 1.21.10, 1.21.11 and 26.2. The 26.x

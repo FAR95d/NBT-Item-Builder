@@ -21,40 +21,13 @@ public final class ItemSpec {
 
     // ---- option lists -------------------------------------------------------------------
 
-    /** id, label, vanilla maximum level */
-    private static final String[][] ENCH = {
-        {"sharpness", "Sharpness", "5"}, {"smite", "Smite", "5"}, {"bane_of_arthropods", "Bane of Arthropods", "5"},
-        {"knockback", "Knockback", "2"}, {"fire_aspect", "Fire Aspect", "2"}, {"looting", "Looting", "3"},
-        {"sweeping_edge", "Sweeping Edge", "3"}, {"efficiency", "Efficiency", "5"}, {"silk_touch", "Silk Touch", "1"},
-        {"unbreaking", "Unbreaking", "3"}, {"fortune", "Fortune", "3"}, {"mending", "Mending", "1"},
-        {"power", "Power", "5"}, {"punch", "Punch", "2"}, {"flame", "Flame", "1"}, {"infinity", "Infinity", "1"},
-        {"protection", "Protection", "4"}, {"fire_protection", "Fire Protection", "4"},
-        {"blast_protection", "Blast Protection", "4"}, {"projectile_protection", "Projectile Protection", "4"},
-        {"feather_falling", "Feather Falling", "4"}, {"respiration", "Respiration", "3"},
-        {"aqua_affinity", "Aqua Affinity", "1"}, {"thorns", "Thorns", "3"}, {"depth_strider", "Depth Strider", "3"},
-        {"frost_walker", "Frost Walker", "2"}, {"soul_speed", "Soul Speed", "3"}, {"swift_sneak", "Swift Sneak", "3"},
-        {"luck_of_the_sea", "Luck of the Sea", "3"}, {"lure", "Lure", "3"}, {"loyalty", "Loyalty", "3"},
-        {"impaling", "Impaling", "5"}, {"riptide", "Riptide", "3"}, {"channeling", "Channeling", "1"},
-        {"multishot", "Multishot", "1"}, {"quick_charge", "Quick Charge", "3"}, {"piercing", "Piercing", "4"},
-        {"curse_of_binding", "Curse of Binding", "1"}, {"curse_of_vanishing", "Curse of Vanishing", "1"},
-        {"density", "Density", "5"}, {"breach", "Breach", "4"}, {"wind_burst", "Wind Burst", "3"}
-    };
+    /** {id, label, max} data for every enchantment in the game, filled by the client
+     * (GameLists) from the live registry, so modded enchantments appear too. */
+    private static List<String[]> enchants = new ArrayList<>();
+    private static Map<String, Integer> enchMax = new HashMap<>();
 
-    private static final String[][] ATTR = {
-        {"max_health", "Max health"}, {"attack_damage", "Attack damage"}, {"attack_speed", "Attack speed"},
-        {"armor", "Armor"}, {"armor_toughness", "Armor toughness"}, {"knockback_resistance", "Knockback resistance"},
-        {"movement_speed", "Movement speed"}, {"attack_knockback", "Attack knockback"}, {"luck", "Luck"},
-        {"max_absorption", "Max absorption"}, {"flying_speed", "Flying speed"}, {"follow_range", "Follow range"},
-        {"scale", "Scale"}, {"step_height", "Step height"}, {"gravity", "Gravity"}, {"jump_strength", "Jump strength"},
-        {"safe_fall_distance", "Safe fall distance"}, {"fall_damage_multiplier", "Fall damage multiplier"},
-        {"burning_time", "Burning time"}, {"explosion_knockback_resistance", "Explosion knockback resistance"},
-        {"movement_efficiency", "Movement efficiency"}, {"oxygen_bonus", "Oxygen bonus"},
-        {"water_movement_efficiency", "Water movement efficiency"},
-        {"block_interaction_range", "Block interaction range"}, {"entity_interaction_range", "Entity interaction range"},
-        {"block_break_speed", "Block break speed"}, {"mining_efficiency", "Mining efficiency"},
-        {"sneaking_speed", "Sneaking speed"}, {"submerged_mining_speed", "Submerged mining speed"},
-        {"sweeping_damage_ratio", "Sweeping damage ratio"}
-    };
+    /** {id, label} for every attribute in the game, filled likewise. */
+    private static List<String[]> attributes = new ArrayList<>();
 
     public static final String[] OP_KEYS = {"add", "multiply_base", "multiply_total"};
     public static final String[] OP_LABELS = {"Add", "Mult. base", "Mult. total"};
@@ -62,27 +35,37 @@ public final class ItemSpec {
     public static final String[] SLOT_KEYS = {"any", "mainhand", "offhand", "head", "chest", "legs", "feet"};
     public static final String[] SLOT_LABELS = {"Any slot", "Main hand", "Off hand", "Head", "Chest", "Legs", "Feet"};
 
-    private static final Map<String, Integer> ENCH_MAX = new HashMap<>();
-    static {
-        for (String[] e : ENCH) ENCH_MAX.put(e[0], Integer.parseInt(e[2]));
+    /** Replaces the enchantment data with the client's live registry contents. */
+    public static void setEnchants(List<String[]> list) {
+        if (list == null) return;
+        enchants = list;
+        enchMax = new HashMap<>();
+        for (String[] e : list) {
+            try {
+                enchMax.put(e[0], Integer.parseInt(e[2]));
+            } catch (RuntimeException ex) { /* leave the level unfilled */ }
+        }
+    }
+
+    /** Replaces the attribute data with the client's live registry contents. */
+    public static void setAttributes(List<String[]> list) {
+        if (list != null) attributes = list;
     }
 
     /** {id, label} pairs for the enchantment picker. */
     public static List<String[]> enchantOptions() {
         List<String[]> out = new ArrayList<>();
-        for (String[] e : ENCH) out.add(new String[] {e[0], e[1]});
+        for (String[] e : enchants) out.add(new String[] {e[0], e[1]});
         return out;
     }
 
     /** {id, label} pairs for the attribute picker. */
     public static List<String[]> attributeOptions() {
-        List<String[]> out = new ArrayList<>();
-        for (String[] a : ATTR) out.add(new String[] {a[0], a[1]});
-        return out;
+        return attributes;
     }
 
     public static int maxLevel(String enchantId) {
-        return ENCH_MAX.getOrDefault(base(enchantId.trim().toLowerCase(Locale.ROOT)), 1);
+        return enchMax.getOrDefault(base(enchantId.trim().toLowerCase(Locale.ROOT)), 5);
     }
 
     // ---- output -------------------------------------------------------------------------
