@@ -65,7 +65,9 @@ public final class ItemSpec {
     }
 
     public static int maxLevel(String enchantId) {
-        return enchMax.getOrDefault(base(enchantId.trim().toLowerCase(Locale.ROOT)), 5);
+        String id = enchantId.trim().toLowerCase(Locale.ROOT);
+        Integer v = enchMax.get(id.contains(":") ? id : "minecraft:" + id);
+        return v != null ? v : 5;
     }
 
     // ---- output -------------------------------------------------------------------------
@@ -352,11 +354,17 @@ public final class ItemSpec {
         List<String> mods = new ArrayList<>();
         for (ItemModel.Attr a : list) {
             if (a.id == null || a.id.isBlank()) continue;
+            // Accept "max_health", legacy "generic.max_health", "minecraft:max_health"
+            // and modded "whatever:reinforce" alike; write back with the namespace.
             String name = a.id.trim().toLowerCase(Locale.ROOT);
-            for (String prefix : new String[] {"minecraft:", "generic.", "player."}) {
-                if (name.startsWith(prefix)) name = name.substring(prefix.length());
+            if (name.startsWith("minecraft:")) name = name.substring(10);
+            if (!name.contains(":")) {
+                for (String legacy : new String[] {"generic.", "player."}) {
+                    if (name.startsWith(legacy)) name = name.substring(legacy.length());
+                }
+                name = "minecraft:" + name;
             }
-            if (!ATTR_BASE.matcher(name).matches()) {
+            if (!ID.matcher(name).matches()) {
                 throw new IllegalArgumentException("Attribute \"" + a.id.trim() + "\" is not a valid name.");
             }
             double amount;
@@ -368,9 +376,10 @@ public final class ItemSpec {
             int op = indexOf(OP_KEYS, a.op);
             int slot = indexOf(SLOT_KEYS, a.slot);
             if (op < 0 || slot < 0) throw new IllegalArgumentException("Pick an operation and slot for " + name + ".");
-            mods.add("{type:" + Snbt.quote("minecraft:" + name)
+            mods.add("{type:" + Snbt.quote(name)
                     + ",slot:" + Snbt.quote(SLOT_KEYS[slot])
-                    + ",id:" + Snbt.quote("nbtitembuilder:" + name + "_" + (mods.size() + 1))
+                    + ",id:" + Snbt.quote("nbtitembuilder:" + base(name).replace('.', '_')
+                        + "_" + (mods.size() + 1))
                     + ",amount:" + num(amount)
                     + ",operation:" + Snbt.quote(OP_COMPONENT[op]) + "}");
         }
@@ -852,7 +861,6 @@ public final class ItemSpec {
     // ---- parsing ------------------------------------------------------------------------
 
     private static final Pattern ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+|[a-z0-9_./-]+");
-    private static final Pattern ATTR_BASE = Pattern.compile("[a-z0-9_]+");
     private static final Pattern COUNT_TOKEN = Pattern.compile("x(\\d+)");
     private static final Pattern SLOT_TOKEN = Pattern.compile("@(\\d+)");
 

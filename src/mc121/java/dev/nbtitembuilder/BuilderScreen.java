@@ -1121,7 +1121,7 @@ public class BuilderScreen extends Screen {
             if (mx >= matStripX + i * matCellW && mx < matStripX + i * matCellW + matCellW - 2
                     && my >= matStripY && my < matStripY + 20) {
                 String id = trimMats.get(i)[0];
-                MODEL.trimMaterial = id.equals(normId(MODEL.trimMaterial)) ? "" : id;
+                MODEL.trimMaterial = normId(id).equals(normId(MODEL.trimMaterial)) ? "" : id;
                 refresh();
                 return true;
             }
@@ -1308,30 +1308,23 @@ public class BuilderScreen extends Screen {
         if (itemEntries == null) {
             itemEntries = new ArrayList<>();
             for (Object key : BuiltInRegistries.ITEM.keySet()) {
-                String path = pathOf(key);
-                if (path.equals("air")) continue;
-                itemEntries.add(new SuggestBox.Entry(path, "item"));
+                String id = Ids.of(key);
+                if (id.equals("minecraft:air")) continue;
+                itemEntries.add(new SuggestBox.Entry(id, "item"));
             }
         }
         return itemEntries;
     }
 
-    /** "minecraft:stone" to "stone", without version-specific types. */
-    private static String pathOf(Object key) {
-        String s = key.toString();
-        int i = s.indexOf(':');
-        return i < 0 ? s : s.substring(i + 1);
-    }
-
     private static Set<String> itemIdSet;
 
-    private static boolean hasItem(String path) {
+    private static boolean hasItem(String id) {
         try {
             if (itemIdSet == null) {
                 itemIdSet = new HashSet<>();
                 for (Object key : BuiltInRegistries.ITEM.keySet()) itemIdSet.add(key.toString());
             }
-            return itemIdSet.contains("minecraft:" + path);
+            return itemIdSet.contains(id.contains(":") ? id : "minecraft:" + id);
         } catch (RuntimeException e) {
             return false;
         }
@@ -1344,9 +1337,13 @@ public class BuilderScreen extends Screen {
         {"happy_ghast", "ghast_harness"}, {"ghastling", "dried_ghast"},
     };
 
-    private static String mobIcon(String id) {
-        if (hasItem(id + "_spawn_egg")) return "{id:\"minecraft:" + id + "_spawn_egg\",count:1}";
-        if (hasItem(id)) return "{id:\"minecraft:" + id + "\",count:1}";
+    private static String mobIcon(String fullId) {
+        // Spawn eggs live in the mob's namespace when there is one; eggless mobs borrow
+        // their drop (vanilla table) or their like-named item.
+        String ns = fullId.contains(":") ? fullId.substring(0, fullId.indexOf(':')+1) : "minecraft:";
+        String id = normId(fullId);
+        if (hasItem(ns + id + "_spawn_egg")) return "{id:\"" + ns + id + "_spawn_egg\",count:1}";
+        if (hasItem(fullId)) return "{id:\"" + fullId + "\",count:1}";
         for (String[] d : MOB_DROPS) {
             if (d[0].equals(id)) return "{id:\"minecraft:" + d[1] + "\",count:1}";
         }
@@ -1358,9 +1355,9 @@ public class BuilderScreen extends Screen {
         if (mobEntries == null) {
             mobEntries = new ArrayList<>();
             for (Object key : BuiltInRegistries.ENTITY_TYPE.keySet()) {
-                String path = pathOf(key);
-                if (path.equals("player")) continue;
-                mobEntries.add(new SuggestBox.Entry(path, "mob", mobIcon(path)));
+                String id = Ids.of(key);
+                if (id.equals("minecraft:player")) continue;
+                mobEntries.add(new SuggestBox.Entry(id, "mob", mobIcon(id)));
             }
         }
         return mobEntries;
@@ -1371,7 +1368,7 @@ public class BuilderScreen extends Screen {
         if (potionEntries == null) {
             potionEntries = new ArrayList<>();
             for (Object key : BuiltInRegistries.POTION.keySet()) {
-                potionEntries.add(new SuggestBox.Entry(pathOf(key), "potion"));
+                potionEntries.add(new SuggestBox.Entry(Ids.of(key), "potion"));
             }
         }
         return potionEntries;
@@ -1382,7 +1379,7 @@ public class BuilderScreen extends Screen {
         if (effectEntries == null) {
             effectEntries = new ArrayList<>();
             for (Object key : BuiltInRegistries.MOB_EFFECT.keySet()) {
-                effectEntries.add(new SuggestBox.Entry(pathOf(key), "effect"));
+                effectEntries.add(new SuggestBox.Entry(Ids.of(key), "effect"));
             }
         }
         return effectEntries;
@@ -1809,7 +1806,7 @@ public class BuilderScreen extends Screen {
                 if (icon != null && !icon.isEmpty() && matCellW >= 16) {
                     g.renderItem(icon, x + (matCellW - 16) / 2, matStripY + 2);
                 }
-                if (trimMats.get(i)[0].equals(normId(MODEL.trimMaterial))) {
+                if (normId(trimMats.get(i)[0]).equals(normId(MODEL.trimMaterial))) {
                     outline(g, x, matStripY - 1, matCellW, 22, 0xFFFFFFFF);
                 }
             }

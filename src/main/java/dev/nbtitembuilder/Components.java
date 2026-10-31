@@ -167,7 +167,6 @@ public final class Components {
      * game or its mods define shows up in the pickers; nothing here is hardcoded.
      * Empty until the builder screen opens in a world. */
     public static List<String> bannerIds = List.of();
-    public static List<String> trimMaterialIds = List.of();
     public static List<String> trimPatternIds = List.of();
     public static List<String> songIds = List.of();
 

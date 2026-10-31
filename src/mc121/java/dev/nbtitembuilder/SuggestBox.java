@@ -138,16 +138,18 @@ public class SuggestBox {
         return stack;
     }
 
-    /** The icon SNBT for an entry, or null for text-only rows. */
+    /** The icon SNBT for an entry, or null for text-only rows. Ids carry their
+     * namespace, so modded content keeps its own. */
     public static String iconSnbt(Entry e) {
-        String base = e.id.contains(":") ? e.id.substring(e.id.indexOf(':') + 1) : e.id;
+        String ns = e.id.contains(":") ? e.id.substring(0, e.id.indexOf(':') + 1) : "minecraft:";
+        String base = ns.isEmpty() ? e.id : e.id.substring(e.id.indexOf(':') + 1);
         return switch (e.kind) {
-            case "item" -> "{id:\"minecraft:" + base + "\",count:1}";
-            case "mob" -> "{id:\"minecraft:" + base + "_spawn_egg\",count:1}";
-            case "potion" -> "{id:\"minecraft:potion\",count:1,components:{\"minecraft:potion_contents\":{potion:\"minecraft:"
-                    + base + "\"}}}";
-            case "banner" -> "{id:\"minecraft:white_banner\",count:1,components:{\"minecraft:banner_patterns\":[{pattern:\"minecraft:"
-                    + base + "\",color:\"black\"}]}}";
+            case "item" -> "{id:\"" + e.id + "\",count:1}";
+            case "mob" -> "{id:\"" + ns + base + "_spawn_egg\",count:1}";
+            case "potion" -> "{id:\"minecraft:potion\",count:1,components:{\"minecraft:potion_contents\":{potion:\""
+                    + e.id + "\"}}}";
+            case "banner" -> "{id:\"minecraft:white_banner\",count:1,components:{\"minecraft:banner_patterns\":[{pattern:\""
+                    + e.id + "\",color:\"black\"}]}}";
             case "template" -> "{id:\"minecraft:" + base + "_armor_trim_smithing_template\",count:1}";
             case "disc" -> "{id:\"minecraft:music_disc_" + base + "\",count:1}";
             default -> null;

@@ -79,9 +79,6 @@ final class GameLists {
                 mats.add(new String[] {id, INGREDIENTS.get(id)});
             }
             trimMats = List.copyOf(mats);
-            List<String> matIds = new ArrayList<>();
-            for (String[] m : mats) matIds.add(m[0]);
-            Components.trimMaterialIds = matIds;
         } catch (RuntimeException e) {
             // Main menu, a very early join or a modded registry bad entry: keep the last set.
         }

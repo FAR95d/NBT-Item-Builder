@@ -17,22 +17,24 @@ public class LogicSuite {
     }
 
     public static void main(String[] args) {
-        // Registry-driven lists: inject sample data the way GameLists does.
+        // Registry-driven lists: inject sample data the way GameLists does
+        // (ids come from Ids.of, so they carry their namespace).
         ItemSpec.setEnchants(List.of(
-            new String[] {"sharpness", "Sharpness", "5"},
-            new String[] {"my_cool_mod_enchant", "Modded Enchant from a mod", "7"}));
+            new String[] {"minecraft:sharpness", "Sharpness", "5"},
+            new String[] {"cools:my_cool_mod_enchant", "Modded Enchant from a mod", "7"}));
         ItemSpec.setAttributes(List.of(
             new String[] {"max_health", "Max Health"},
             new String[] {"modattr", "Modded Attribute"}));
         Components.bannerIds = List.of("base", "stripe_bottom", "modded_pattern");
         Components.trimPatternIds = List.of("sentry", "modded_sentry");
-        Components.trimMaterialIds = List.of("quartz", "modded_ore");
         Components.songIds = List.of("11", "pigstep", "modded_song");
         Components.setInstruments(List.of("added_by_mod_goat_horn"));
 
         eq("options include modded", "" + ItemSpec.enchantOptions().size(), "2");
-        eq("maxLevel injected", "" + ItemSpec.maxLevel("sharpness"), "5");
-        eq("maxLevel modded", "" + ItemSpec.maxLevel("my_cool_mod_enchant"), "7");
+        eq("maxLevel plain", "" + ItemSpec.maxLevel("sharpness"), "5");
+        eq("maxLevel namespaced", "" + ItemSpec.maxLevel("minecraft:sharpness"), "5");
+        eq("maxLevel modded", "" + ItemSpec.maxLevel("cools:my_cool_mod_enchant"), "7");
+        eq("maxLevel unknown", "" + ItemSpec.maxLevel("not_a_thing"), "5");
         eq("modded attr label", ItemSpec.attributeOptions().get(1)[1], "Modded Attribute");
         eq("banner list", "" + Components.bannerIds.size(), "3");
         ok("instrument default first", Components.instrumentKeys[0].equals(""));
@@ -53,12 +55,47 @@ public class LogicSuite {
         // Enchantment level default = registry max when box empty (5 for sharpness).
         ok("level defaulted", ItemSpec.giveCommand(m, "@s").contains("sharpness\":5"));
 
+        // A modded enchantment keeps its namespace in the command.
+        ItemModel mm = new ItemModel();
+        mm.id = "diamond_sword";
+        ItemModel.Ench me = new ItemModel.Ench();
+        me.id = "cools:my_cool_mod_enchant";
+        mm.enchants.add(me);
+        ok("modded enchant kept", ItemSpec.giveCommand(mm, "@s").contains("enchantments={\"cools:my_cool_mod_enchant\":7}"));
+
         // --- custom components untouched passthrough ---
         ItemModel m2 = new ItemModel();
         m2.id = "stick";
         m2.customComps = "my_mod_custom={Value:2}";
         eq("custom comp passthrough", ItemSpec.giveCommand(m2, "@s"),
             "give @s minecraft:stick[my_mod_custom={Value:2}] 1");
+
+        // --- attributes: vanilla, legacy-prefixed and modded names all write ---
+        ItemModel ma = new ItemModel();
+        ma.id = "diamond_sword";
+        ItemModel.Attr at = new ItemModel.Attr();
+        at.id = "max_health";
+        at.amount = "10";
+        ma.attrs.add(at);
+        String maNbt = ItemSpec.itemNbt(ma);
+        ok("attr written", maNbt.contains("{type:\"minecraft:max_health\""));
+
+        ItemModel ma2 = new ItemModel();
+        ma2.id = "diamond_sword";
+        ItemModel.Attr at2 = new ItemModel.Attr();
+        at2.id = "cools:reinforcement";
+        at2.amount = "2";
+        ma2.attrs.add(at2);
+        String ma2Nbt = ItemSpec.itemNbt(ma2);
+        ok("attr modded written", ma2Nbt.contains("{type:\"cools:reinforcement\""));
+
+        ItemModel ma3 = new ItemModel();
+        ma3.id = "diamond_sword";
+        ItemModel.Attr at3 = new ItemModel.Attr();
+        at3.id = "generic.max_health";
+        at3.amount = "4";
+        ma3.attrs.add(at3);
+        ok("attr legacy written", ItemSpec.itemNbt(ma3).contains("{type:\"minecraft:max_health\""));
 
         // --- trim & banner round-trip in SNBT build ---
         ItemModel m3 = new ItemModel();

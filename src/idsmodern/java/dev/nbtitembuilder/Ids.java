@@ -8,9 +8,10 @@ package dev.nbtitembuilder;
 final class Ids {
     private Ids() {}
 
-    /** "minecraft:x" for a registry key or a raw registry id. */
+    /** Id string ("minecraft:x") for a registry key or a raw registry id. */
     static String of(Object keyOrId) {
-        if (keyOrId instanceof net.minecraft.resources.Identifier k) return k.getPath();
+        if (keyOrId instanceof net.minecraft.resources.ResourceKey<?> k) return k.identifier().toString();
+        if (keyOrId instanceof net.minecraft.resources.Identifier id) return id.toString();
         return String.valueOf(keyOrId);
     }
 }

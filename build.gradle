@@ -104,8 +104,8 @@ tasks.register('logicTest', JavaExec) {
 	group = 'verification'
 	description = 'Runs the self-contained logic regression suite.'
 	dependsOn('testClasses')
-	classpath = sourceSets.main.output + sourceSets.test.output
-	mainClass = 'dev.nbtitembuilder.LogicSuite'
+	classpath = sourceSets.main.runtimeClasspath + sourceSets.test.output
+	mainClass = 'dev.nbtitembuilder.Regression'
 }
 tasks.check {
 	dependsOn('logicTest')
