@@ -185,7 +185,9 @@ public final class Components {
         String[] labels = new String[keys.size()];
         labels[0] = "Default";
         for (int i = 1; i < keys.size(); i++) {
-            labels[i] = humanize(keys.get(i).replace("_goat_horn", ""));
+            String k = keys.get(i);
+            if (k.contains(":")) k = k.substring(k.indexOf(':') + 1);
+            labels[i] = humanize(k.replace("_goat_horn", ""));
         }
         instrumentLabels = labels;
     }

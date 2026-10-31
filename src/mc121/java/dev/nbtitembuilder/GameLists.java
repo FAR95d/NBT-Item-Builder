@@ -44,7 +44,8 @@ final class GameLists {
         return trimMats;
     }
 
-    /** Pushes live registry data into the shared lists. Never throws. */
+    /** Pushes live registry data into the shared lists. Never throws; each
+     * section fails on its own so one bad registry cannot blank the rest. */
     static void refresh() {
         try {
             Minecraft mc = Minecraft.getInstance();
@@ -52,35 +53,53 @@ final class GameLists {
             RegistryAccess access = mc.level.registryAccess();
 
             // Enchantments: id, localized name, vanilla max level.
-            List<String[]> ench = new ArrayList<>();
-            for (var e : access.lookupOrThrow(Registries.ENCHANTMENT).entrySet()) {
-                ench.add(new String[] {Ids.of(e.getKey()), e.getValue().description().getString(),
-                    Integer.toString(e.getValue().getMaxLevel())});
-            }
-            ItemSpec.setEnchants(ench);
+            tryC(() -> {
+                List<String[]> ench = new ArrayList<>();
+                for (var e : access.lookupOrThrow(Registries.ENCHANTMENT).entrySet()) {
+                    ench.add(new String[] {Ids.of(e.getKey()), e.getValue().description().getString(),
+                        Integer.toString(e.getValue().getMaxLevel())});
+                }
+                ItemSpec.setEnchants(ench);
+            });
 
             // Attributes live in a static registry (modded ones register there too).
-            List<String[]> attrs = new ArrayList<>();
-            for (var e : BuiltInRegistries.ATTRIBUTE.entrySet()) {
-                attrs.add(new String[] {Ids.of(e.getKey()),
-                    Component.translatable(e.getValue().getDescriptionId()).getString()});
-            }
-            ItemSpec.setAttributes(attrs);
+            tryC(() -> {
+                List<String[]> attrs = new ArrayList<>();
+                for (var e : BuiltInRegistries.ATTRIBUTE.entrySet()) {
+                    attrs.add(new String[] {Ids.of(e.getKey()),
+                        Component.translatable(e.getValue().getDescriptionId()).getString()});
+                }
+                ItemSpec.setAttributes(attrs);
+            });
 
-            Components.bannerIds = ids(access.lookupOrThrow(Registries.BANNER_PATTERN));
-            Components.trimPatternIds = ids(access.lookupOrThrow(Registries.TRIM_PATTERN));
-            Components.songIds = ids(access.lookupOrThrow(Registries.JUKEBOX_SONG));
-            Components.setInstruments(ids(access.lookupOrThrow(Registries.INSTRUMENT)));
+            tryC(() -> Components.bannerIds = ids(access.lookupOrThrow(Registries.BANNER_PATTERN)));
+            tryC(() -> Components.trimPatternIds = ids(access.lookupOrThrow(Registries.TRIM_PATTERN)));
+            tryC(() -> Components.songIds = ids(access.lookupOrThrow(Registries.JUKEBOX_SONG)));
+            tryC(() -> Components.setInstruments(ids(access.lookupOrThrow(Registries.INSTRUMENT))));
 
             // Trim materials keep their ingredient table only for the strip icons.
-            List<String[]> mats = new ArrayList<>();
-            for (var e : access.lookupOrThrow(Registries.TRIM_MATERIAL).entrySet()) {
-                String id = Ids.of(e.getKey());
-                mats.add(new String[] {id, INGREDIENTS.get(id)});
-            }
-            trimMats = List.copyOf(mats);
+            tryC(() -> {
+                List<String[]> mats = new ArrayList<>();
+                for (var e : access.lookupOrThrow(Registries.TRIM_MATERIAL).entrySet()) {
+                    String id = Ids.of(e.getKey());
+                    mats.add(new String[] {id, INGREDIENTS.get(pathOf(id))});
+                }
+                trimMats = List.copyOf(mats);
+            });
         } catch (RuntimeException e) {
-            // Main menu, a very early join or a modded registry bad entry: keep the last set.
+            // Main menu or a very early join: keep the last set.
+        }
+    }
+
+    private interface Section {
+        void run();
+    }
+
+    private static void tryC(Section r) {
+        try {
+            r.run();
+        } catch (RuntimeException e) {
+            // A modded registry with a bad entry: keep whatever we had.
         }
     }
 
@@ -89,5 +108,11 @@ final class GameLists {
         List<String> out = new ArrayList<>();
         for (Object id : reg.keySet()) out.add(Ids.of(id));
         return out;
+    }
+
+    /** "minecraft:x" to "x", for tables keyed on bare vanilla paths. */
+    private static String pathOf(String id) {
+        int i = id.indexOf(':');
+        return i < 0 ? id : id.substring(i + 1);
     }
 }
